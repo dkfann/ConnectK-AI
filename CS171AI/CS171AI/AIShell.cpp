@@ -10,6 +10,10 @@
 //#include <Windows.h>
 extern double diff = 0;
 
+struct node{
+	std::vector<std::pair<int, int>> movelist;
+	struct node *child;
+};
 
 AIShell::AIShell(int numCols, int numRows, bool gravityOn, int** gameState, Move lastMove)
 {
@@ -44,25 +48,47 @@ void AIShell::printEval(std::vector<int> eval)
 	std::cout << std::endl;
 }
 
-std::vector<std::pair<int, int> > AIShell::possMoves(int **S)
+std::vector<std::pair<int, int>> AIShell::possMoves(int **S)
 {
 	std::vector<std::pair<int, int> > move_list;
 	std::cout << "In possmoves" << std::endl;
 	std::pair<int, int> coord;
 
-	for (int col = 0; col < numCols; col++)
+	/* Checks if gravity is on. If so, enumerates movelist with moves that abide with gravity.*/
+	if (gravityOn)
 	{
-		for (int row = 0; row < numRows; row++)
+		for (int col = 0; col < numCols; col++)
 		{
-			if (S[col][row] == NO_PIECE)
+			for (int row = 0; row < numRows; row++)
 			{
-				std::cout << "Adding piece: " << "(" << col << "," << row << ")" << std::endl;
-				coord = std::make_pair(col, row);
-				move_list.push_back(coord);
-				break;
+				if (S[col][row] == NO_PIECE)
+				{
+					std::cout << "Adding piece: " << "(" << col << "," << row << ")" << std::endl;
+					coord = std::make_pair(col, row);
+					move_list.push_back(coord);
+					break;
+				}
 			}
 		}
 	}
+
+	/*If gravity is off, then any empty piece is a possible move.*/
+	else
+	{
+		for (int col = 0; col < numCols; col++)
+		{
+			for (int row = 0; row < numRows; row++)
+			{
+				if (S[col][row] == NO_PIECE)
+				{
+					std::cout << "Adding piece: " << "(" << col << "," << row << ")" << std::endl;
+					coord = std::make_pair(col, row);
+					move_list.push_back(coord);
+				}
+			}
+		}
+	}
+
 	return move_list;
 }
 
@@ -475,24 +501,139 @@ int AIShell::Eval(int **S)
 //
 //}
 
+//std::pair<std::pair<int, int>, int> AIShell::DFS(int depth, int **S, int player, time_t start)
+//{
+//	//int **gsc = S;
+//	diff = difftime(time(0), start) * 1000;
+//	if (diff >= deadline - 1000)
+//	{
+//		std::cout << "STARTING TIME OUT" << std::endl;
+//		std::pair<int, int> what;
+//		what = std::make_pair(0, 0);
+//		std::pair<std::pair<int, int>, int> dummy;
+//		dummy = std::make_pair(what, 1);
+//		return dummy;
+//	}
+//	int **gsc = new int*[numCols];
+//	for (int i = 0; i < numCols; i++) {
+//		gsc[i] = new int[numRows];
+//	}
+//
+//	for (int col = 0; col < numCols; col++)
+//	{
+//		for (int row = 0; row < numRows; row++)
+//		{
+//			gsc[col][row] = S[col][row];
+//		}
+//	}
+//	if (depth == 0)
+//	{
+//		std::cout << "Depth = " << depth << ", at base case." << std::endl;
+//		std::pair<int, int> what;
+//		what = std::make_pair(0, 0);
+//		std::pair<std::pair<int, int>, int> dummy;
+//		int eval_num = Eval(S);
+//		std::cout << "Eval result = " << eval_num << std::endl;
+//		dummy = std::make_pair(what, eval_num);
+//
+//		return(dummy);
+//
+//	}
+//
+//	else
+//	{
+//		std::cout << "Depth = " << depth << ", inside else statement." << std::endl;
+//		std::vector<int> nodes;
+//		std::vector<std::pair<int, int> > moves_list = possMoves(gsc);
+//		for (int i = 0; i < moves_list.size(); i++)
+//		{
+//			std::cout << "Iterating through Moveslist: " << i << " = (" << moves_list[i].first << "," << moves_list[i].second << ")" << std::endl;
+//			gsc[moves_list[i].first][moves_list[i].second] = player;
+//			diff = difftime(time(0), start) * 1000;
+//			if (diff >= deadline - 1000)
+//			{
+//				std::pair<int, int> what;
+//				what = std::make_pair(0, 0);
+//				std::pair<std::pair<int, int>, int> dummy;
+//				int eval_num = Eval(S);
+//				std::cout << "Eval result = " << eval_num << std::endl;
+//				dummy = std::make_pair(what, eval_num);
+//				return(dummy);
+//			}
+//			nodes.push_back(DFS(depth - 1, gsc, -1 * player, start).second);
+//			for (int col = 0; col < numCols; col++)
+//			{
+//				for (int row = 0; row < numRows; row++)
+//				{
+//					gsc[col][row] = S[col][row];
+//				}
+//			}
+//		}
+//		//std::cout << "NODES: " << "( " << depth << " )";
+//		//for (int j = 0; j < nodes.size(); j++)
+//		//{
+//		//	std::cout << nodes[j] << " ";
+//		//}
+//		std::cout << std::endl;
+//		if (player == 1)
+//		{
+//			int max_val = 0;
+//			int index = 0;
+//			std::pair<std::pair<int, int>, int> eval_data;
+//			for (int i = 0; i < nodes.size(); i++)
+//			{
+//				//std::cout << "CURRENT: " << nodes[i] << " and MAX: " << max_val << std::endl;
+//				if (nodes[i] > max_val)
+//				{
+//					max_val = nodes[i];
+//					index = i;
+//				}
+//			}
+//			eval_data = std::make_pair(moves_list[index], max_val);
+//			for (int i = 0; i < numCols; i++) {
+//				delete[] gsc[i];
+//			}
+//			delete[] gsc;
+//			return(eval_data);
+//		}
+//
+//		else
+//		{
+//			int min_val = 0;
+//			int index = 0;
+//			std::pair<std::pair<int, int>, int> eval_data;
+//			for (int i = 0; i < nodes.size(); i++)
+//			{
+//				//std::cout << "CURRENT: " << nodes[i] << " and MIN: " << min_val << std::endl;
+//				if (i == 0)
+//				{
+//					min_val = nodes[i];
+//					index = i;
+//				}
+//				if (nodes[i] < min_val)
+//				{
+//					min_val = nodes[i];
+//					index = i;
+//				}
+//			}
+//			eval_data = std::make_pair(moves_list[index], min_val);
+//			for (int i = 0; i < numCols; i++) {
+//				delete[] gsc[i];
+//			}
+//			delete[] gsc;
+//			return(eval_data);
+//		}
+//	}
+//}
 std::pair<std::pair<int, int>, int> AIShell::DFS(int depth, int **S, int player, time_t start)
 {
-	//int **gsc = S;
-	diff = difftime(time(0), start) * 1000;
-	if (diff >= deadline - 1000)
-	{
-		std::cout << "STARTING TIME OUT" << std::endl;
-		std::pair<int, int> what;
-		what = std::make_pair(0, 0);
-		std::pair<std::pair<int, int>, int> dummy;
-		dummy = std::make_pair(what, 1);
-		return dummy;
-	}
+	/* Make a copy of the current game state and put it into gsc */
 	int **gsc = new int*[numCols];
-	for (int i = 0; i < numCols; i++) {
+	for (int i = 0; i < numCols; i++) 
+	{
 		gsc[i] = new int[numRows];
 	}
-
+	
 	for (int col = 0; col < numCols; col++)
 	{
 		for (int row = 0; row < numRows; row++)
@@ -500,106 +641,22 @@ std::pair<std::pair<int, int>, int> AIShell::DFS(int depth, int **S, int player,
 			gsc[col][row] = S[col][row];
 		}
 	}
-	if (depth == 0)
+	/* Check the current time difference between start and DFS time. Only proceed with the loop if diff time 
+		is lower than the deadline - 1ms.*/
+	diff = difftime(time(0), start) * 1000;
+	while (diff <= deadline - 1000)
 	{
-		std::cout << "Depth = " << depth << ", at base case." << std::endl;
-		std::pair<int, int> what;
-		what = std::make_pair(0, 0);
-		std::pair<std::pair<int, int>, int> dummy;
-		int eval_num = Eval(S);
-		std::cout << "Eval result = " << eval_num << std::endl;
-		dummy = std::make_pair(what, eval_num);
+		//Create a vector of possible moves.
+		std::vector<std::pair<int, int>> movelist = possMoves(gsc);
 
-		return(dummy);
-
+		for (auto i = 0; i <= depth; i++)
+		{
+			
+		}
 	}
 
-	else
-	{
-		std::cout << "Depth = " << depth << ", inside else statement." << std::endl;
-		std::vector<int> nodes;
-		std::vector<std::pair<int, int> > moves_list = possMoves(gsc);
-		for (int i = 0; i < moves_list.size(); i++)
-		{
-			std::cout << "Iterating through Moveslist: " << i << " = (" << moves_list[i].first << "," << moves_list[i].second << ")" << std::endl;
-			gsc[moves_list[i].first][moves_list[i].second] = player;
-			diff = difftime(time(0), start) * 1000;
-			if (diff >= deadline - 1000)
-			{
-				std::pair<int, int> what;
-				what = std::make_pair(0, 0);
-				std::pair<std::pair<int, int>, int> dummy;
-				int eval_num = Eval(S);
-				std::cout << "Eval result = " << eval_num << std::endl;
-				dummy = std::make_pair(what, eval_num);
-				return(dummy);
-			}
-			nodes.push_back(DFS(depth - 1, gsc, -1 * player, start).second);
-			for (int col = 0; col < numCols; col++)
-			{
-				for (int row = 0; row < numRows; row++)
-				{
-					gsc[col][row] = S[col][row];
-				}
-			}
-		}
-		//std::cout << "NODES: " << "( " << depth << " )";
-		//for (int j = 0; j < nodes.size(); j++)
-		//{
-		//	std::cout << nodes[j] << " ";
-		//}
-		std::cout << std::endl;
-		if (player == 1)
-		{
-			int max_val = 0;
-			int index = 0;
-			std::pair<std::pair<int, int>, int> eval_data;
-			for (int i = 0; i < nodes.size(); i++)
-			{
-				//std::cout << "CURRENT: " << nodes[i] << " and MAX: " << max_val << std::endl;
-				if (nodes[i] > max_val)
-				{
-					max_val = nodes[i];
-					index = i;
-				}
-			}
-			eval_data = std::make_pair(moves_list[index], max_val);
-			for (int i = 0; i < numCols; i++) {
-				delete[] gsc[i];
-			}
-			delete[] gsc;
-			return(eval_data);
-		}
-
-		else
-		{
-			int min_val = 0;
-			int index = 0;
-			std::pair<std::pair<int, int>, int> eval_data;
-			for (int i = 0; i < nodes.size(); i++)
-			{
-				//std::cout << "CURRENT: " << nodes[i] << " and MIN: " << min_val << std::endl;
-				if (i == 0)
-				{
-					min_val = nodes[i];
-					index = i;
-				}
-				if (nodes[i] < min_val)
-				{
-					min_val = nodes[i];
-					index = i;
-				}
-			}
-			eval_data = std::make_pair(moves_list[index], min_val);
-			for (int i = 0; i < numCols; i++) {
-				delete[] gsc[i];
-			}
-			delete[] gsc;
-			return(eval_data);
-		}
-	}
+		
 }
-
 std::pair<std::pair<int, int>, int> AIShell::IDS()
 {
 	time_t start;
