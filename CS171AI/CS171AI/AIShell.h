@@ -3,6 +3,7 @@
 
 #pragma once
 #include "Move.h"
+#include <time.h>
 #include <vector>
 
 
@@ -14,7 +15,7 @@ public:
 	static const int AI_PIECE = 1;
 	static const int HUMAN_PIECE = -1;
 	static const int NO_PIECE = 0;
-
+	double diff;
 
 private:
 	//Do not alter the values of numRows or numcols. 
@@ -40,7 +41,7 @@ public:
 	std::vector<std::pair<int, int> > possMoves(int **S);
 	//std::vector<std::pair<int, int>> move_list;
 	void printMoves();
-	std::pair<std::pair<int, int>, int> DFS(int depth, int **S, int player);
+	std::pair<std::pair<int, int>, int> DFS(int depth, int **S, int player, time_t start);
 	std::pair<std::pair<int, int>, int> IDS();
 };
 

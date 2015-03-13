@@ -4,10 +4,11 @@
 #include <algorithm>
 #include <iterator>
 #include <math.h>
-#include <time.h>
+#include <stdlib.h>
+
 
 //#include <Windows.h>
-
+extern double diff = 0;
 
 
 AIShell::AIShell(int numCols, int numRows, bool gravityOn, int** gameState, Move lastMove)
@@ -474,9 +475,19 @@ int AIShell::Eval(int **S)
 //
 //}
 
-std::pair<std::pair<int, int>, int> AIShell::DFS(int depth, int **S, int player)
+std::pair<std::pair<int, int>, int> AIShell::DFS(int depth, int **S, int player, time_t start)
 {
 	//int **gsc = S;
+	diff = difftime(time(0), start) * 1000;
+	if (diff >= deadline - 1000)
+	{
+		std::cout << "STARTING TIME OUT" << std::endl;
+		std::pair<int, int> what;
+		what = std::make_pair(0, 0);
+		std::pair<std::pair<int, int>, int> dummy;
+		dummy = std::make_pair(what, 1);
+		return dummy;
+	}
 	int **gsc = new int*[numCols];
 	for (int i = 0; i < numCols; i++) {
 		gsc[i] = new int[numRows];
@@ -512,7 +523,18 @@ std::pair<std::pair<int, int>, int> AIShell::DFS(int depth, int **S, int player)
 		{
 			std::cout << "Iterating through Moveslist: " << i << " = (" << moves_list[i].first << "," << moves_list[i].second << ")" << std::endl;
 			gsc[moves_list[i].first][moves_list[i].second] = player;
-			nodes.push_back(DFS(depth - 1, gsc, -1 * player).second);
+			diff = difftime(time(0), start) * 1000;
+			if (diff >= deadline - 1000)
+			{
+				std::pair<int, int> what;
+				what = std::make_pair(0, 0);
+				std::pair<std::pair<int, int>, int> dummy;
+				int eval_num = Eval(S);
+				std::cout << "Eval result = " << eval_num << std::endl;
+				dummy = std::make_pair(what, eval_num);
+				return(dummy);
+			}
+			nodes.push_back(DFS(depth - 1, gsc, -1 * player, start).second);
 			for (int col = 0; col < numCols; col++)
 			{
 				for (int row = 0; row < numRows; row++)
@@ -521,6 +543,12 @@ std::pair<std::pair<int, int>, int> AIShell::DFS(int depth, int **S, int player)
 				}
 			}
 		}
+		//std::cout << "NODES: " << "( " << depth << " )";
+		//for (int j = 0; j < nodes.size(); j++)
+		//{
+		//	std::cout << nodes[j] << " ";
+		//}
+		std::cout << std::endl;
 		if (player == 1)
 		{
 			int max_val = 0;
@@ -528,6 +556,7 @@ std::pair<std::pair<int, int>, int> AIShell::DFS(int depth, int **S, int player)
 			std::pair<std::pair<int, int>, int> eval_data;
 			for (int i = 0; i < nodes.size(); i++)
 			{
+				//std::cout << "CURRENT: " << nodes[i] << " and MAX: " << max_val << std::endl;
 				if (nodes[i] > max_val)
 				{
 					max_val = nodes[i];
@@ -549,6 +578,12 @@ std::pair<std::pair<int, int>, int> AIShell::DFS(int depth, int **S, int player)
 			std::pair<std::pair<int, int>, int> eval_data;
 			for (int i = 0; i < nodes.size(); i++)
 			{
+				//std::cout << "CURRENT: " << nodes[i] << " and MIN: " << min_val << std::endl;
+				if (i == 0)
+				{
+					min_val = nodes[i];
+					index = i;
+				}
 				if (nodes[i] < min_val)
 				{
 					min_val = nodes[i];
@@ -569,15 +604,26 @@ std::pair<std::pair<int, int>, int> AIShell::IDS()
 {
 	time_t start;
 	time(&start);
-	double diff = difftime(time(0), start)*1000;
+	diff = difftime(time(0), start) * 1000;
 	int depth = 1;
 	std::pair <int, int> temp;
 	temp = std::make_pair(0, 0);
 	std::pair<std::pair<int, int>, int> result;
 	result = std::make_pair(temp, 0);
-	while(diff < 2000)
+	auto du = result;
+	while(diff < deadline - 1000)
 	{
-		result = DFS(depth, gameState, AI_PIECE);
+		du = DFS(depth, gameState, AI_PIECE, start);
+		if (diff < deadline - 1000)
+		{
+			result = du;
+			std::cout << "UPDATED WITH : " << du.first.first << du.first.second << du.second << std::endl;
+		}
+		else
+		{
+			std::cout << "TIMEOUT" << std::endl;
+		}
+
 		depth++;
 		diff = difftime(time(0), start)*1000;
 	}
@@ -586,6 +632,7 @@ std::pair<std::pair<int, int>, int> AIShell::IDS()
 
 Move AIShell::makeMove() {
 	deadline = (deadline <= 0 || deadline>5000) ? 5000 : deadline;
+	srand(time(NULL));
 	//this part should be filled in by the student to implement the AI
 	//Example of a move could be: Move move(1, 2); //this will make a move at col 1, row 2
 
