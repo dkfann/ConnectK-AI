@@ -41,7 +41,7 @@ public:
 	std::vector<std::pair<int, int> > possMoves(int **S);
 	//std::vector<std::pair<int, int>> move_list;
 	void printMoves();
-	std::pair<std::pair<int, int>, int> DFS(int depth, int **S, int player, time_t start);
+	std::pair<std::pair<int, int>, int> DFS(int depth, int **S, int player, clock_t start);
 	std::pair<std::pair<int, int>, int> IDS();
 };
 

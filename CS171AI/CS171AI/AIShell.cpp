@@ -475,11 +475,15 @@ int AIShell::Eval(int **S)
 //
 //}
 
-std::pair<std::pair<int, int>, int> AIShell::DFS(int depth, int **S, int player, time_t start)
+std::pair<std::pair<int, int>, int> AIShell::DFS(int depth, int **S, int player, clock_t t)
 {
 	//int **gsc = S;
-	diff = difftime(time(0), start) * 1000;
-	if (diff >= deadline - 1000)
+	float curr = clock() - t;
+	curr = ((float)curr / CLOCKS_PER_SEC);
+
+	std::cout << "Time: " << curr << std::endl;
+	//diff = difftime(time(0), start) * 1000;
+	if (curr >= (deadline/1000)-1)
 	{
 		std::cout << "STARTING TIME OUT" << std::endl;
 		std::pair<int, int> what;
@@ -523,8 +527,9 @@ std::pair<std::pair<int, int>, int> AIShell::DFS(int depth, int **S, int player,
 		{
 			std::cout << "Iterating through Moveslist: " << i << " = (" << moves_list[i].first << "," << moves_list[i].second << ")" << std::endl;
 			gsc[moves_list[i].first][moves_list[i].second] = player;
-			diff = difftime(time(0), start) * 1000;
-			if (diff >= deadline - 1000)
+			curr = clock() - t;
+			curr = ((float)curr / CLOCKS_PER_SEC);
+			if (curr >= (deadline/1000)-1)
 			{
 				std::pair<int, int> what;
 				what = std::make_pair(0, 0);
@@ -534,7 +539,7 @@ std::pair<std::pair<int, int>, int> AIShell::DFS(int depth, int **S, int player,
 				dummy = std::make_pair(what, eval_num);
 				return(dummy);
 			}
-			nodes.push_back(DFS(depth - 1, gsc, -1 * player, start).second);
+			nodes.push_back(DFS(depth - 1, gsc, -1 * player, t).second);
 			for (int col = 0; col < numCols; col++)
 			{
 				for (int row = 0; row < numRows; row++)
@@ -602,19 +607,20 @@ std::pair<std::pair<int, int>, int> AIShell::DFS(int depth, int **S, int player,
 
 std::pair<std::pair<int, int>, int> AIShell::IDS()
 {
-	time_t start;
-	time(&start);
-	diff = difftime(time(0), start) * 1000;
+	clock_t t;
+	t = clock();
+	float curr = clock() - t;
+	curr = ((float)curr / CLOCKS_PER_SEC);
 	int depth = 1;
 	std::pair <int, int> temp;
 	temp = std::make_pair(0, 0);
 	std::pair<std::pair<int, int>, int> result;
 	result = std::make_pair(temp, 0);
 	auto du = result;
-	while(diff < deadline - 1000)
+	while(curr < (deadline/1000)-1)
 	{
-		du = DFS(depth, gameState, AI_PIECE, start);
-		if (diff < deadline - 1000)
+		du = DFS(depth, gameState, AI_PIECE, t);
+		if (curr <= (deadline/1000)-1)
 		{
 			result = du;
 			std::cout << "UPDATED WITH : " << du.first.first << du.first.second << du.second << std::endl;
@@ -625,7 +631,8 @@ std::pair<std::pair<int, int>, int> AIShell::IDS()
 		}
 
 		depth++;
-		diff = difftime(time(0), start)*1000;
+		curr = clock() - t;
+		curr = ((float)curr / CLOCKS_PER_SEC);
 	}
 	return result;
 }
